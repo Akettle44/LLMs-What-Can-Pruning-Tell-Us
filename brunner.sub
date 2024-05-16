@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#SBATCH --job-name=brunner
+#SBATCH -A CLASS-CS190295
+#SBATCH --time 1-00:00:00
+#SBATCH --error=logs/brunner_error.err
+#SBATCH --output=logs/brunner_output.out 
+
+module load miniconda3/4.12.0
+source ~/.bashrc
+conda activate newenv
+python train.py
