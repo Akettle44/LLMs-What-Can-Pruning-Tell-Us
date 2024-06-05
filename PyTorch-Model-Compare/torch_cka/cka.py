@@ -117,8 +117,6 @@ class CKA:
                 self.model2_info['Layers'] += [name]
                 layer.register_forward_hook(partial(self._log_layer, "model2", name))
 
-        #print("Model2 Layers: ", self.model2_info['Layers'])
-
     def _HSIC(self, K, L):
         """
         Computes the unbiased estimate of HSIC metric.
@@ -158,28 +156,23 @@ class CKA:
         num_batches = min(len(dataloader1), len(dataloader1))
 
         # original
-        #for (x1, *_), (x2, *_) in tqdm(zip(dataloader1, dataloader2), desc="| Comparing features |", total=num_batches):
-        for x1, x2 in tqdm(zip(dataloader1, dataloader2), desc="| Comparing features |", total=num_batches):
+        for (x1, x2) in tqdm(zip(dataloader1, dataloader2), desc="| Comparing features |", total=num_batches):
 
             self.model1_features = {}
             self.model2_features = {}
 
-            # Original
-            #_ = self.model1(x1.to(self.device))
-            #_ = self.model2(x2.to(self.device))
+            # Send inputs to device
+            x1 = {k: v.to(self.device) for k,v in x1.items()}
+            x2 = {k: v.to(self.device) for k,v in x2.items()}
 
+            # Perform inference
             _ = self.model1(**x1)
             _ = self.model2(**x2)
 
-            #print(self.model1_features.items())
-            #print('\n')
-
             for i, (name1, feat1) in enumerate(self.model1_features.items()):
 
-                feat1 = feat1[0]
-                #print("Feat1 Length: ", len(feat1))
-                #print("Feat1[0].shape", feat1[0].shape)
-                #print("Feat1[1].shape", feat1[1].shape)
+                feat1 = feat1[0]  # Attentions
+                #feat1 = feat1[1] # Outputs
 
                 X = feat1.flatten(1)
                 K = X @ X.t()
@@ -188,7 +181,9 @@ class CKA:
 
                 for j, (name2, feat2) in enumerate(self.model2_features.items()):
 
-                    feat2 = feat2[0]
+                    feat2 = feat2[0]  # Attentions
+                    #feat2 = feat2[1] # Outputs
+
                     Y = feat2.flatten(1)
                     L = Y @ Y.t()
                     L.fill_diagonal_(0)
@@ -200,7 +195,7 @@ class CKA:
         self.hsic_matrix = self.hsic_matrix[:, :, 1] / (self.hsic_matrix[:, :, 0].sqrt() *
                                                         self.hsic_matrix[:, :, 2].sqrt())
 
-        #assert not torch.isnan(self.hsic_matrix).any(), "HSIC computation resulted in NANs"
+        assert not torch.isnan(self.hsic_matrix).any(), "HSIC computation resulted in NANs"
 
     def export(self) -> Dict:
         """
@@ -237,4 +232,4 @@ class CKA:
         if save_path is not None:
             plt.savefig(save_path, dpi=300)
 
-        plt.show()
+        #plt.show()
