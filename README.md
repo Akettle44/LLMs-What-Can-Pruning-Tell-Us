@@ -16,7 +16,7 @@ num_classes = 2
 task_type = 'sequence_classification'
 ```
 
-Load model, configuration, and tokenizer"
+Load model, configuration, and tokenizer:
 ```
 model, config, tokenizer = load_all(model_directory, num_classes, task_type)
 ```
