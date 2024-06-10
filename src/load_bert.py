@@ -25,7 +25,7 @@ class BertCustomHead(torch.nn.Module):
         if task_type not in self.heads:
             raise ValueError("Invalid task type. Supported types: 'sequence_classification', 'token_classification', 'multiple_choice', 'summarization'")
 
-    def forward(self, input_ids, attention_mask=None, token_type_ids=None, decoder_input_ids=None):
+    def forward(self, input_ids, attention_mask=None, token_type_ids=None, decoder_input_ids=None, label=None):
 
         if self.task_type == 'summarization':
             outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
@@ -33,16 +33,11 @@ class BertCustomHead(torch.nn.Module):
             attentions = outputs.attentions
             logits = self.heads[self.task_type](task_output)
             
-        elif self.task_type == 'sequence_classification':
+        else:
             outputs = self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
             attentions = outputs.attentions
-            task_output = outputs.last_hidden_state
-            logits = self.heads[self.task_type](task_output)
-        else:
-            outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
             task_output = outputs.pooler_output
-            attentions = outputs.attentions
-            return self.heads[self.task_type](task_output)
+            logits = self.heads[self.task_type](task_output)
 
         return task_output, attentions, logits
 
