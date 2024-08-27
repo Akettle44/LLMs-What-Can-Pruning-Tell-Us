@@ -1,2 +1,8 @@
 models
 bertenv
+*.cpython-310.pyc
+*__pycache__
+__pycache__*
+.python-version
+plots/*
+.vscode/settings.json
