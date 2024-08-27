@@ -1,28 +1,36 @@
 ### Unit tests for the load_bert_test module ###
 
 import os
-import torch
 import pytest
 
-#from typing import override
-from ..src.load_bert import BertCustomHead, load_all, load_config_and_tokenizer, load_model
-from .fixtures import setUp, tearDown
+from ..src.model import BertCustomHead
+from ..src.load_bert import load_all, load_config_and_tokenizer, load_model
 
 @pytest.mark.usefixtures("setUp")
 class TestBertLoad():
 
-    # Use for specific test later
-    outsideclass_tests_num_classes = 2
-    outsideclass_tests_task_type = 'sequence_classification'
-
-    def test_intializeBertWithNull(self, setUp):
-        """
-        Verify that BERT can be initialized with no config or tokenizer provided
+    def test_LoadAll(self, setUp):
+        """ 
+        Verify that model, config, and tokenizer can all be loaded from disk
+        NOTE: 
+        This is dependent on your local environment. An instance of bert
+        already needs to exist. If this test is failing that is likely why.
+        TODO: Improve this to be inclusive of local testing module without tracking
+        large files
         """
 
         config = None
-        num_classes = 1
-        task_type = None
+        num_classes = 2
+        task_type = 'sequence_classification'
 
-        with pytest.raises(ValueError):
-            bert = BertCustomHead(config, 1, task_type)
+
+        test_dir, root_dir, model_dir,  = setUp
+
+        model_directory = os.path.join(model_dir, "bert_finetuned_sst2")
+
+        bert, config, tokenizer = load_all(model_directory, num_classes, task_type)
+        assert bert.config == config
+        assert bert.num_classes == num_classes
+        assert bert.task_type == task_type
+
+
