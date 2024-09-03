@@ -3,7 +3,7 @@
 import os
 import pytest
 
-@pytest.fixture()
+@pytest.fixture
 def setUp():
     root_dir = os.getcwd()
     test_dir = os.path.join(root_dir, "test")

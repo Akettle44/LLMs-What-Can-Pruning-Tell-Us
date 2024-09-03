@@ -3,7 +3,7 @@
 import pytest
 import transformers
 from ..src.model import BertCustom
-from .fixtures import setUp
+from .conftest import setUp
 
 @pytest.mark.usefixtures("setUp")
 class TestBertInstantiation():
@@ -16,10 +16,11 @@ class TestBertInstantiation():
 
         config = None
         num_classes = 1
+        tokenizer = None
         task_type = None
 
         with pytest.raises(ValueError):
-            bert = BertCustom(config, num_classes, task_type)
+            bert = BertCustom(config, num_classes, tokenizer, task_type)
 
     def test_intializeBertSequence(self):
         """
@@ -29,9 +30,12 @@ class TestBertInstantiation():
         config = None
         num_classes = 2
         task_type = 'sequence_classification'
-        bert = BertCustom(config, num_classes, task_type)
+        tokenizer = None
+        bert = BertCustom(config, num_classes, tokenizer, task_type)
         
+        assert not bert.config == None
         assert bert.num_classes == num_classes
+        assert not bert.tokenizer == None
         assert bert.task_type == task_type
 
     def test_intializeBertToken(self):
@@ -41,10 +45,13 @@ class TestBertInstantiation():
 
         config = None
         num_classes = 2
+        tokenizer = None
         task_type = 'token_classification'
-        bert = BertCustom(config, num_classes, task_type)
+        bert = BertCustom(config, num_classes, tokenizer, task_type)
         
+        assert not bert.config == None
         assert bert.num_classes == num_classes
+        assert not bert.tokenizer == None
         assert bert.task_type == task_type
 
     def test_intializeBertMcq(self):
@@ -54,10 +61,13 @@ class TestBertInstantiation():
 
         config = None
         num_classes = 2
+        tokenizer = None
         task_type = 'multiple_choice'
-        bert = BertCustom(config, num_classes, task_type)
+        bert = BertCustom(config, num_classes, tokenizer, task_type)
         
+        assert not bert.config == None
         assert bert.num_classes == num_classes
+        assert not bert.tokenizer == None
         assert bert.task_type == task_type
 
     def test_correctParamsPretrained(self):
@@ -66,11 +76,12 @@ class TestBertInstantiation():
 
         config = None
         num_classes = 2
+        tokenizer = None
         task_type = 'sequence_classification'
         model_name = 'bert-base-uncased'
 
         bert = transformers.BertModel.from_pretrained(model_name, num_classes)
-        bertcus = BertCustom(config, num_classes, task_type)
+        bertcus = BertCustom(config, num_classes, tokenizer, task_type)
 
         # Verify that parameters are the same
         assert str(bertcus.model.state_dict()) == str(bert.state_dict())
@@ -82,11 +93,12 @@ class TestBertInstantiation():
 
         config = None
         num_classes = 2
+        tokenizer = None
         task_type = 'sequence_classification'
         model_name = 'bert-base-uncased'
 
         bert = transformers.BertModel.from_pretrained(model_name, num_classes)
-        bertcus = BertCustom(config, num_classes, task_type, False)
+        bertcus = BertCustom(config, num_classes, tokenizer, task_type, False)
 
         # Verify that parameters are the same
         assert not str(bertcus.model.state_dict()) == str(bert.state_dict())

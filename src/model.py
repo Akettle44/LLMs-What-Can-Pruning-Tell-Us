@@ -27,17 +27,25 @@ class HeadModule(torch.nn.Module):
         return out
 
 class BertCustom(torch.nn.Module):
-    def __init__(self, config, num_classes, task_type, use_pretrained=True, default_model='bert-base-uncased'):
+    def __init__(self, config, num_classes, tokenizer, task_type, use_pretrained=True, 
+                 default_model='bert-base-uncased'):
         super(BertCustom, self).__init__()
 
         self.config = config
         self.num_classes = num_classes
         self.task_type = task_type
+        self.pretrained = use_pretrained
+        self.tokenizer = tokenizer
 
-        if config is None and not use_pretrained:
+        # Tokenizer
+        if self.tokenizer is None:
+            self.tokenizer = BertTokenizer.from_pretrained(default_model)
+
+        # Config and model
+        if self.config is None and not use_pretrained:
             self.config = BertConfig()
             self.model = BertModel(self.config)
-        elif config is None:
+        elif self.config is None:
             self.model = BertModel.from_pretrained(default_model)
             self.config = self.model.config
         else:
