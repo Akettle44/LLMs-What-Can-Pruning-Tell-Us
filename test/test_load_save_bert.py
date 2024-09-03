@@ -5,7 +5,7 @@ import pytest
 import shutil
 
 from ..src.model import BertCustom
-from ..src.load_save import save_model_to_disk, load_model_from_disk
+from ..src.load_save import saveModelToDisk, loadModelFromDisk
 
 @pytest.mark.usefixtures("setUp")
 class TestBertIO():
@@ -23,7 +23,7 @@ class TestBertIO():
         # Create the model
         bert = BertCustom(config, num_classes, tokenizer, task_type, False)
         # Save the model to disk
-        save_model_to_disk(bert, root_dir, "unit-test-bert")
+        saveModelToDisk(bert, root_dir, "unit-test-bert")
 
     def test_loadModel(self, setUp):
         """ Load model 
@@ -42,7 +42,7 @@ class TestBertIO():
 
         # Load BERT from disk
         load_path = os.path.join(os.path.join(model_dir, task_type), "unit-test-bert")
-        bert = load_model_from_disk(load_path)
+        bert = loadModelFromDisk(load_path)
 
         assert saved_bert.num_classes == bert.num_classes
         assert saved_bert.task_type == bert.task_type

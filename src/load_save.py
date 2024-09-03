@@ -3,7 +3,7 @@ import torch
 from transformers import BertConfig, BertTokenizer
 from .model import BertCustom
 
-def save_model_to_disk(model: BertCustom, root_dir, model_name):
+def saveModelToDisk(model: BertCustom, root_dir, model_name):
     """ Save the bert model to disk (using huggingface)
 
     Args:
@@ -31,7 +31,7 @@ def save_model_to_disk(model: BertCustom, root_dir, model_name):
         f.write('Legend: num_classes, task_type \n')
         f.write(f"{model.num_classes}, {model.task_type}")
 
-def load_model_from_disk(model_dir):
+def loadModelFromDisk(model_dir):
     """ Load the config, tokenizer, and model from disk (local)
     If you want to use a pretrained model directly from HuggingFace, 
     you can override the default model parameter when creating a 
