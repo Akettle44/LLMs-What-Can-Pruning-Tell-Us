@@ -26,46 +26,48 @@ class HeadModule(torch.nn.Module):
             return out, loss
         return out
 
-class BertCustomHead(torch.nn.Module):
-    def __init__(self, config, num_classes, task_type):
-        super(BertCustomHead, self).__init__()
+class BertCustom(torch.nn.Module):
+    def __init__(self, config, num_classes, task_type, use_pretrained=True, default_model='bert-base-uncased'):
+        super(BertCustom, self).__init__()
 
         self.config = config
         self.num_classes = num_classes
         self.task_type = task_type
 
-        # Handle empty config
-        if config is None:
-            config = BertConfig()
-            print("Config is None; Defaulting to HuggingFace BertConfig")
+        if config is None and not use_pretrained:
+            self.config = BertConfig()
+            self.model = BertModel(self.config)
+        elif config is None:
+            self.model = BertModel.from_pretrained(default_model)
+            self.config = self.model.config
         else:
-            self.bert = BertModel(config)
-
+            self.model = BertModel(self.config)
+        
         # Task Options
         self.task_modules = torch.nn.ModuleDict({
             'sequence_classification': 
-            HeadModule(torch.nn.Linear(config.hidden_size, num_classes), torch.nn.CrossEntropyLoss()),
+            HeadModule(torch.nn.Linear(self.config.hidden_size, num_classes), torch.nn.CrossEntropyLoss()),
             'token_classification':
-            HeadModule(torch.nn.Linear(config.hidden_size, num_classes), torch.nn.CrossEntropyLoss()),
+            HeadModule(torch.nn.Linear(self.config.hidden_size, num_classes), torch.nn.CrossEntropyLoss()),
             'multiple_choice':  
-            HeadModule(torch.nn.Linear(config.hidden_size, 1), torch.nn.BCEWithLogitsLoss())
+            HeadModule(torch.nn.Linear(self.config.hidden_size, 1), torch.nn.BCEWithLogitsLoss())
         })
+
             #'summarization': 
             #HeadModule(torch.nn.Linear(config.hidden_size, config.vocab_size), torch.nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id))
-                
+                        
         # Hanlde unsupported task
         if task_type not in list(self.task_modules.keys()):
             raise ValueError(f'Invalid task type. Supported types: {list(self.task_modules.keys())}') 
 
     def forward(self, input_ids, attention_mask=None, token_type_ids=None, decoder_input_ids=None, target=None):
 
-        # TODO: Add support for summarization
-        #if self.task_type == 'summarization':
+            #'summarization': _summary_
         #    outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         #    intermediate_output = outputs.last_hidden_state
         #    attentions = outputs.attentions
 
-        outputs = self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
+        outputs = self.model(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
         intermediate_output = outputs.pooler_output
         attentions = outputs.attentions
 
@@ -77,4 +79,3 @@ class BertCustomHead(torch.nn.Module):
             loss = None
 
         return logits, attentions, intermediate_output, loss
- 

@@ -1,6 +1,8 @@
 ### Unit tests for the load_bert_test module ###
+
 import pytest
-from ..src.model import BertCustomHead
+import transformers
+from ..src.model import BertCustom
 from .fixtures import setUp
 
 @pytest.mark.usefixtures("setUp")
@@ -17,7 +19,7 @@ class TestBertInstantiation():
         task_type = None
 
         with pytest.raises(ValueError):
-            bert = BertCustomHead(config, num_classes, task_type)
+            bert = BertCustom(config, num_classes, task_type)
 
     def test_intializeBertSequence(self):
         """
@@ -27,9 +29,8 @@ class TestBertInstantiation():
         config = None
         num_classes = 2
         task_type = 'sequence_classification'
-        bert = BertCustomHead(config, num_classes, task_type)
+        bert = BertCustom(config, num_classes, task_type)
         
-        assert bert.config == config
         assert bert.num_classes == num_classes
         assert bert.task_type == task_type
 
@@ -41,9 +42,8 @@ class TestBertInstantiation():
         config = None
         num_classes = 2
         task_type = 'token_classification'
-        bert = BertCustomHead(config, num_classes, task_type)
+        bert = BertCustom(config, num_classes, task_type)
         
-        assert bert.config == config
         assert bert.num_classes == num_classes
         assert bert.task_type == task_type
 
@@ -55,9 +55,39 @@ class TestBertInstantiation():
         config = None
         num_classes = 2
         task_type = 'multiple_choice'
-        bert = BertCustomHead(config, num_classes, task_type)
+        bert = BertCustom(config, num_classes, task_type)
         
-        assert bert.config == config
         assert bert.num_classes == num_classes
         assert bert.task_type == task_type
+
+    def test_correctParamsPretrained(self):
+        """ Verify that bert-base-uncased is loaded by default
+        """
+
+        config = None
+        num_classes = 2
+        task_type = 'sequence_classification'
+        model_name = 'bert-base-uncased'
+
+        bert = transformers.BertModel.from_pretrained(model_name, num_classes)
+        bertcus = BertCustom(config, num_classes, task_type)
+
+        # Verify that parameters are the same
+        assert str(bertcus.model.state_dict()) == str(bert.state_dict())
+
+    def test_pretrainedNotUsed(self):
+
+        """ Verify that non-pretrained version doesn't use pretrained weights
+        """
+
+        config = None
+        num_classes = 2
+        task_type = 'sequence_classification'
+        model_name = 'bert-base-uncased'
+
+        bert = transformers.BertModel.from_pretrained(model_name, num_classes)
+        bertcus = BertCustom(config, num_classes, task_type, False)
+
+        # Verify that parameters are the same
+        assert not str(bertcus.model.state_dict()) == str(bert.state_dict())
 
