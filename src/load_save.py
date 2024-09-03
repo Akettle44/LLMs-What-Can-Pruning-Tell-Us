@@ -12,11 +12,12 @@ def save_model_to_disk(model: BertCustom, root_dir, model_name):
     """
 
     task_dir = os.path.join(os.path.join(root_dir, "models"), model.task_type)
-
     if( not os.path.exists(task_dir)):
         os.mkdir(task_dir)
+
     save_dir = os.path.join(task_dir, model_name)
-    os.mkdir(save_dir)
+    if ( not os.path.exists(save_dir)):
+        os.mkdir(save_dir)
     model_dir = os.path.join(save_dir, "model.pth")
 
     # Write the config, model, and tokenizer to disk
@@ -47,13 +48,14 @@ def load_model_from_disk(model_dir):
     with open(metadata, 'r') as f:
         for idx, line in enumerate(f):
             if idx == 1:
-                num_classes, task_type = line.strip().split(',')
+                num_classes, task_type = line.split(',')
+                num_classes = int(num_classes)
+                task_type = task_type.strip()
 
     bert = BertCustom(config, num_classes, tokenizer, task_type)
+
     # TODO: Improve this, should be internal to class
     state_dict = torch.load(os.path.join(model_dir, 'model.pth'))
     bert.load_state_dict(state_dict)
 
     return bert
-
-# TODO: Write cleanup function for this test
