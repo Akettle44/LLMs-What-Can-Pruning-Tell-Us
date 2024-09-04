@@ -1,15 +1,9 @@
+### This file performs training in PyTorch
+
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from transformers import BertForSequenceClassification
-from data import load_data
+from ..model.model import BertCustom
 
 """
-This file (train.py) does the following -
-(1) Imports the `bert-base-uncased` model from the transformers library for text classification
-(2) Initialises the loss function and optimizer
-(3) Imports the training and validation data from `data.py`
-(4) Trains the model and returns the training losses and validation accuracies for each epoch
 
 """
 
@@ -100,10 +94,3 @@ def fineTune():
         #print("Epoch {} - Validation Accuracy: {:.4f}".format(epoch+1, avg_val_accuracy))
 
     return train_loss, val_loss
-
-def main():
-    train_loss, val_loss = fineTune()
-    print(train_loss)
-
-if __name__ == '__main__':
-    main()
