@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 from abc import ABC, abstractmethod
 
 class TaskDataset(ABC):
+
+    @abstractmethod
     def __init__(self, dataset_name, task_name, tokenizer, root_dir, loadLocal=False):
         self.dataset_name = dataset_name
         self.task_name = task_name

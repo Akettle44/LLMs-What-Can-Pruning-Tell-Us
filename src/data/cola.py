@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 class ColaDataset(TaskDataset):
     def __init__(self, dataset_name, task_name, tokenizer, root_dir, loadLocal=False):
-        super(TaskDataset, self, dataset_name, task_name, tokenizer, root_dir, loadLocal).__init__()
+        super().__init__(dataset_name, task_name, tokenizer, root_dir, loadLocal)
         self.loadDataset()
         self.max_length = self.findMaxLengthInDataset()
 
@@ -16,10 +16,9 @@ class ColaDataset(TaskDataset):
 
     @override
     def encode(self):
-        self.tokenized_dataset_hf = self.dataset.map(self.preprocess, batched=True, \
-                                fn_kwargs={'tokenizer': self.tokenizer, 'max_len': self.max_length})
+        self.tokenized_dataset_hf = self.dataset.map(self.preprocess, batched=True)
         self.tokenized_dataset_pt = self.tokenized_dataset_hf.with_format('torch', \
-                                columns=['input_ids', 'token_type_ids', 'attention_mask'])
+                                columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
 
     def findMaxLengthInDataset(self):
         max_len_train = len(max(self.dataset['train']['sentence'][:]))
