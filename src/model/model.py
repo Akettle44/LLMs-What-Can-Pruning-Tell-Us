@@ -26,9 +26,17 @@ class HeadModule(torch.nn.Module):
             return out, loss
         return out
 
+    def changeLossFunction(self, newLossFunction):
+        """ This function provides the ability to change a HeadModule's loss function.
+        """
+        if not issubclass(torch.nn):
+            raise ValueError("HeadModule::changeLossFunction: invalid loss function provided")
+
+        self.loss_function = newLossFunction
+
 class BertCustom(torch.nn.Module):
     def __init__(self, config, num_classes, tokenizer, task_type, use_pretrained=True, 
-                 default_model='bert-base-uncased'):
+                 default_model='bert-base-uncased', override_loss_function=None):
         super(BertCustom, self).__init__()
 
         self.config = config
@@ -61,9 +69,10 @@ class BertCustom(torch.nn.Module):
             HeadModule(torch.nn.Linear(self.config.hidden_size, 1), torch.nn.BCEWithLogitsLoss())
         })
 
-            #'summarization': 
-            #HeadModule(torch.nn.Linear(config.hidden_size, config.vocab_size), torch.nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id))
-                        
+        # Override loss function if user provided
+        if override_loss_function is not None:
+            self.task_modules[self.task_type].changeLossFunction(override_loss_function)
+
         # Hanlde unsupported task
         if task_type not in list(self.task_modules.keys()):
             raise ValueError(f'Invalid task type. Supported types: {list(self.task_modules.keys())}') 
