@@ -10,6 +10,7 @@ from ...src.model.load_save import saveModelToDisk, loadModelFromDisk
 @pytest.mark.usefixtures("setUp")
 class TestBertIO():
 
+    @pytest.mark.order(1)
     def test_saveModel(self, setUp):
         """ Create and Save BERT model
         """
@@ -26,6 +27,7 @@ class TestBertIO():
         # Save the model to disk
         saveModelToDisk(bert, root_dir, "unit-test-bert")
 
+    @pytest.mark.order(2)
     def test_loadModel(self, setUp):
         """ Load model 
         """
@@ -51,15 +53,15 @@ class TestBertIO():
         # Verify that model was correctly loaded
         assert saved_bert.state_dict().keys() == bert.state_dict().keys()
 
-@pytest.fixture(autouse=True)
-def cleanUpTest(setUp):
+    @pytest.fixture(scope='class', autouse=True)
+    def cleanUpTest(self, setUp):
 
-    _, _, model_root_dir, = setUp
-    yield # Allow test to run first
-    
-    model_name = "unit-test-bert"
-    task_dir = os.path.join(model_root_dir, "sequence_classification")
-    model_dir = os.path.join(task_dir, model_name)
+        _, _, model_root_dir, = setUp
+        yield # Allow test to run first
+        
+        model_name = "unit-test-bert"
+        task_dir = os.path.join(model_root_dir, "sequence_classification")
+        model_dir = os.path.join(task_dir, model_name)
 
-    # Remove dummy model directory
-    shutil.rmtree(model_dir)
+        # Remove dummy model directory
+        shutil.rmtree(model_dir)
