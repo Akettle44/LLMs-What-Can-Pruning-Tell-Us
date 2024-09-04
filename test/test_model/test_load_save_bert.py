@@ -4,8 +4,8 @@ import os
 import pytest
 import shutil
 
-from ..src.model import BertCustom
-from ..src.load_save import saveModelToDisk, loadModelFromDisk
+from ...src.model.model import BertCustom
+from ...src.model.load_save import saveModelToDisk, loadModelFromDisk
 
 @pytest.mark.usefixtures("setUp")
 class TestBertIO():
@@ -19,6 +19,7 @@ class TestBertIO():
         tokenizer = None
         task_type = 'sequence_classification'
         test_dir, root_dir, model_dir,  = setUp
+        print(root_dir)
 
         # Create the model
         bert = BertCustom(config, num_classes, tokenizer, task_type, False)
@@ -53,11 +54,11 @@ class TestBertIO():
 @pytest.fixture(autouse=True)
 def cleanUpTest(setUp):
 
-    _, root_dir, _, = setUp
+    _, _, model_root_dir, = setUp
     yield # Allow test to run first
     
     model_name = "unit-test-bert"
-    task_dir = os.path.join(root_dir, "sequence_classification")
+    task_dir = os.path.join(model_root_dir, "sequence_classification")
     model_dir = os.path.join(task_dir, model_name)
 
     # Remove dummy model directory

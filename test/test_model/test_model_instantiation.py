@@ -2,8 +2,8 @@
 
 import pytest
 import transformers
-from ..src.model import BertCustom
-from .conftest import setUp
+from ...src.model.model import BertCustom
+from ..conftest import setUp
 
 @pytest.mark.usefixtures("setUp")
 class TestBertInstantiation():
