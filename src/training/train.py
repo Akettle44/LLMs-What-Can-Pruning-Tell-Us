@@ -3,94 +3,92 @@
 import torch
 from ..model.model import BertCustom
 
-"""
+class PtTrainer():
 
-"""
+    def __init__(self, model, dataset, optimizer):
+        self.model = model
+        self.dataset = dataset
+        self.optimizer = optimizer
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.hyps = {}
 
-def setupTraining():
+    def setDefaultOptimizer(self):
+        """ Select appropriate opitimizer and associated params
+        """
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5)
 
-    # Create model
-    model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
-    # Send model to GPU (Have to do this before creating optimizer)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+    def setDevice(self):
+        """ Places objects on correct device prior to training
+        """
+        self.model.to(self.device)
+        self.optimizer.to(self.device)
 
-    # Set loss function and optimizer
-    loss_func = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=2e-5)
+    def setHyps(self, **hyps):
+        """ Grab all hyperparameters and their associated value
+        """
+        for key, value in hyps.items():
+            self.hyps[key] = value
 
-    # Set hyperparameters
-    hyps = {}
-    hyps['epochs'] = 3
-
-    return model, device, loss_func, optimizer, hyps
-
-def setupData():
-    train_loader, val_loader = load_data()
-    return train_loader, val_loader
-
-def fineTune():
-    
-    # Setup various parameters of training
-    model, device, loss_func, optimizer, hyps = setupTraining()
-    train_loader, val_loader = setupData()
-
-    # Unpack hyperparameters
-    num_epochs = hyps['epochs']
-
-    train_loss = []
-    val_loss = []
-
-    # Perform training
-    for epoch in range(num_epochs):
-
-        ### TRAINING ###
-        model.train() # Set training mode in PyTorch
-        epoch_train_loss = []
+    def fineTune(self):
         
-        # One iteration over dataset
-        for batch in train_loader:
-            batch = tuple(t.to(device) for t in batch)
-            inputs, masks, labels = batch
+        # Unpack hyperparameters
+        # TODO
 
-            optimizer.zero_grad()
+        train_loss = []
+        val_loss = []
+
+        for epoch in range(self.hyps['epochs']):
+
+            ### TRAINING ###
+            self.model.train() # Set training mode in PyTorch
+            epoch_train_loss = []
             
-            outputs = model(inputs, attention_mask=masks, labels=labels)
-            loss = outputs.loss
-            
-            loss.backward()
-            optimizer.step()
+            # One iteration over dataset
+            for batch in self.dataset.train_loader:
+                batch = tuple(sample.to(self.device) for sample in batch)
 
-            epoch_train_loss.append(loss.item())
-        
-        # Average loss over epoch
-        train_loss.append(torch.mean(torch.tensor(epoch_train_loss)))
-
-        ### END TRAINING ###
-
-        ### VALIDATION ###
-        epoch_val_loss = []
-        
-        model.eval() # Set eval mode
-        val_accuracy = 0
-
-        with torch.no_grad():
-            # Perform validation
-            for batch in val_loader:
-                batch = tuple(t.to(device) for t in batch)
+                # Best way to unpack ?
                 inputs, masks, labels = batch
 
-                outputs = model(inputs, attention_mask=masks)
-                # Grab raw logits
-                logits = outputs.logits
-                logits = logits.detach().cpu().numpy()
-                label_ids = labels.to('cpu').numpy()
-                print(logits)
+
+                self.optimizer.zero_grad()
+                
+                outputs = model(inputs, attention_mask=masks, labels=labels)
+                loss = outputs.loss
+                
+                loss.backward()
+                optimizer.step()
+
+                epoch_train_loss.append(loss.item())
+            
+            # Average loss over epoch
+            train_loss.append(torch.mean(torch.tensor(epoch_train_loss)))
+
+            ### END TRAINING ###
+
+            ### VALIDATION ###
+            epoch_val_loss = []
+            
+            model.eval() # Set eval mode
+            val_accuracy = 0
+
+            with torch.no_grad():
+                # Perform validation
+                for batch in val_loader:
+                    batch = tuple(t.to(device) for t in batch)
+                    inputs, masks, labels = batch
+
+                    outputs = model(inputs, attention_mask=masks)
+                    # Grab raw logits
+                    logits = outputs.logits
+                    logits = logits.detach().cpu().numpy()
+                    label_ids = labels.to('cpu').numpy()
+                    print(logits)
 
 
-                val_accuracy += (logits.argmax(axis=1) == label_ids).mean().item()
-        
-        #avg_val_accuracy = val_accuracy / len(val_loader)
-        #print("Epoch {} - Validation Accuracy: {:.4f}".format(epoch+1, avg_val_accuracy))
+                    val_accuracy += (logits.argmax(axis=1) == label_ids).mean().item()
+            
+            #avg_val_accuracy = val_accuracy / len(val_loader)
+            #print("Epoch {} - Validation Accuracy: {:.4f}".format(epoch+1, avg_val_accuracy))
 
-    return train_loss, val_loss
+        return train_loss, val_loss
