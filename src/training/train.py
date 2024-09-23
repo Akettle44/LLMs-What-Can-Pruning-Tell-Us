@@ -1,27 +1,34 @@
 ### This file performs training in PyTorch
 
 import torch
-from ..model.model import BertCustom
+from model.model import BertCustom
 
 class PtTrainer():
 
-    def __init__(self, model, dataset, optimizer):
+    def __init__(self, model, dataset, optimizer=None):
         self.model = model
         self.dataset = dataset
         self.optimizer = optimizer
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.hyps = {}
 
+        if self.optimizer is None:
+            self.setDefaultOptimizer()
+
     def setDefaultOptimizer(self):
         """ Select appropriate opitimizer and associated params
         """
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5)
 
-    def setDevice(self):
+    def setDevice(self, device):
+        """ Updates the device  
+        """
+        self.device = device
+
+    def sendToDevice(self):
         """ Places objects on correct device prior to training
         """
         self.model.to(self.device)
-        self.optimizer.to(self.device)
 
     def setHyps(self, **hyps):
         """ Grab all hyperparameters and their associated value
@@ -31,64 +38,76 @@ class PtTrainer():
 
     def fineTune(self):
         
-        # Unpack hyperparameters
-        # TODO
+        # Unpack dataset
+        train_loader = self.dataset.train_loader
+        val_loader = self.dataset.val_loader
 
         train_loss = []
+        train_accs = []
         val_loss = []
+        val_accs = []
 
         for epoch in range(self.hyps['epochs']):
 
-            ### TRAINING ###
-            self.model.train() # Set training mode in PyTorch
-            epoch_train_loss = []
+            ### TRAIN SINGLE EPOCH ###
+            # Set training mode in PyTorch
+            self.model.train() 
+            train_epoch_loss = []
+            train_batch_accs = []
             
             # One iteration over dataset
-            for batch in self.dataset.train_loader:
-                batch = tuple(sample.to(self.device) for sample in batch)
-
-                # Best way to unpack ?
-                inputs, masks, labels = batch
-
-
+            for batch in train_loader:
+                
+                # Zero out accumulation
                 self.optimizer.zero_grad()
-                
-                outputs = model(inputs, attention_mask=masks, labels=labels)
-                loss = outputs.loss
-                
+
+                # Generate prediction
+                batch = {k: v.to(self.device) for k,v in batch.items()}
+                outputs = self.model(**batch)
+
+                print(outputs)
+
+                # Compute outputs + loss; update parameters
+                loss = outputs[-1]
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
+                train_epoch_loss.append(loss.item())
 
-                epoch_train_loss.append(loss.item())
+                # Compute Accuracy
+                logits = outputs[0]
+                probabilities = torch.argmax(torch.sigmoid(logits), axis=1)
+                correct = torch.count_nonzero(probabilities == batch['label'])
+                train_batch_accs.append(correct / batch['label'].shape[0])
             
-            # Average loss over epoch
-            train_loss.append(torch.mean(torch.tensor(epoch_train_loss)))
+            # Average loss and accuracy over epoch
+            train_loss.append(torch.mean(torch.tensor(train_epoch_loss)))
+            train_accs.append(torch.mean(torch.tensor(train_batch_accs)))
+            ### END SINGLE EPOCH TRAIN ###
 
-            ### END TRAINING ###
-
-            ### VALIDATION ###
-            epoch_val_loss = []
-            
-            model.eval() # Set eval mode
-            val_accuracy = 0
+            ### EPOCH VALIDATION ###
+            # Set eval mode
+            self.model.eval() 
+            val_epoch_loss = []
+            val_batch_accs = []
 
             with torch.no_grad():
                 # Perform validation
                 for batch in val_loader:
-                    batch = tuple(t.to(device) for t in batch)
-                    inputs, masks, labels = batch
+                    
+                    # Run inference
+                    batch = {k: v.to(self.device) for k,v in batch.items()}
+                    outputs = self.model(**batch)
+                    loss = outputs[-1]
+                    val_epoch_loss.append(loss.item())
 
-                    outputs = model(inputs, attention_mask=masks)
-                    # Grab raw logits
-                    logits = outputs.logits
-                    logits = logits.detach().cpu().numpy()
-                    label_ids = labels.to('cpu').numpy()
-                    print(logits)
-
-
-                    val_accuracy += (logits.argmax(axis=1) == label_ids).mean().item()
+                    # Compute Accuracy
+                    logits = outputs[0]
+                    probabilities = torch.argmax(torch.sigmoid(logits), axis=1)
+                    correct = torch.count_nonzero(probabilities == batch['label'])
+                    val_batch_accs.append(correct / batch['label'].shape[0])
             
-            #avg_val_accuracy = val_accuracy / len(val_loader)
-            #print("Epoch {} - Validation Accuracy: {:.4f}".format(epoch+1, avg_val_accuracy))
+            val_loss.append(torch.mean(torch.tensor(val_epoch_loss)))
+            val_accs.append(torch.mean(torch.tensor(val_batch_accs)))
+            ### END EPOCH VALIDATION ###
 
-        return train_loss, val_loss
+        return train_loss, train_accs, val_loss, val_accs

@@ -77,7 +77,7 @@ class BertCustom(torch.nn.Module):
         if task_type not in list(self.task_modules.keys()):
             raise ValueError(f'Invalid task type. Supported types: {list(self.task_modules.keys())}') 
 
-    def forward(self, input_ids, attention_mask=None, token_type_ids=None, decoder_input_ids=None, target=None):
+    def forward(self, input_ids, attention_mask=None, token_type_ids=None, label=None):
 
             #'summarization': _summary_
         #    outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
@@ -89,8 +89,8 @@ class BertCustom(torch.nn.Module):
         attentions = outputs.attentions
 
         # Compute loss as well
-        if(target is not None):
-            logits, loss = self.task_modules[self.task_type](intermediate_output, target)
+        if(label is not None):
+            logits, loss = self.task_modules[self.task_type](intermediate_output, label)
         else:
             logits = self.task_modules[self.task_type](intermediate_output)
             loss = None
