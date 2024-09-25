@@ -54,5 +54,36 @@ class TestSst2Dataset():
         item = next(iter(sst2.train_loader))
         assert set(item.keys()) == set(['input_ids', 'attention_mask', 'label'])
 
+    def testRandomSubset(self, setUp):
+        """
+        Verify that the random subset returns the correct amount
+        """
+
+        # Model
+        config = None
+        num_classes = 2
+        tokenizer = None
+        task_type = 'sequence_classification'
+        bert = BertCustom(config, num_classes, tokenizer, task_type)
+
+        # Dataset
+        dataset_name = "glue"
+        task_name = "sst2"
+        root_dir = os.getcwd()
+        loadLocal = False
+        sst2 = Sst2Dataset(dataset_name, task_name, bert.tokenizer, root_dir, loadLocal)
+        sst2.encode()
+        sst2.createDataLoaders(8, 1, 1)
+
+        # Subset
+        perc = 0.5
+        oglen = len(sst2.tokenized_dataset_pt['validation'])
+        sub = sst2.grabRandomSubset(sst2.tokenized_dataset_pt['validation'], perc)
+        assert len(sub) == int(perc * oglen)
+
+
+
+
+
 
 

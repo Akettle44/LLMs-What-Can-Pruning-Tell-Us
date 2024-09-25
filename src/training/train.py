@@ -1,6 +1,7 @@
 ### This file performs training in PyTorch
 
 import torch
+from tqdm import tqdm
 from model.model import BertCustom
 
 class PtTrainer():
@@ -56,7 +57,7 @@ class PtTrainer():
             train_batch_accs = []
             
             # One iteration over dataset
-            for batch in train_loader:
+            for batch in tqdm(train_loader):
                 
                 # Zero out accumulation
                 self.optimizer.zero_grad()
@@ -64,8 +65,6 @@ class PtTrainer():
                 # Generate prediction
                 batch = {k: v.to(self.device) for k,v in batch.items()}
                 outputs = self.model(**batch)
-
-                print(outputs)
 
                 # Compute outputs + loss; update parameters
                 loss = outputs[-1]
@@ -92,7 +91,7 @@ class PtTrainer():
 
             with torch.no_grad():
                 # Perform validation
-                for batch in val_loader:
+                for batch in tqdm(val_loader):
                     
                     # Run inference
                     batch = {k: v.to(self.device) for k,v in batch.items()}
@@ -109,5 +108,8 @@ class PtTrainer():
             val_loss.append(torch.mean(torch.tensor(val_epoch_loss)))
             val_accs.append(torch.mean(torch.tensor(val_batch_accs)))
             ### END EPOCH VALIDATION ###
+
+            # Results from each epoch of training
+            print(f"Epoch {epoch}:  train_loss: {train_loss[-1]}, val_loss: {val_loss[-1]}")
 
         return train_loss, train_accs, val_loss, val_accs

@@ -2,6 +2,7 @@
 
 import os
 import datasets
+import numpy as np
 from torch.utils.data import DataLoader
 
 from abc import ABC, abstractmethod
@@ -69,13 +70,31 @@ class TaskDataset(ABC):
         """
         pass
 
-    def createDataLoaders(self, batch_size_train, batch_size_test, num_workers):
+    def createDataLoaders(self, batch_size_train, batch_size_test, num_workers, pin_memory=False, shuffle=True, subset_percentages=[1, 1, 1]):
         """ Create dataloaders for training (train, validation, test)
+            Subset percentages: Multiplier for choosing the size of the dataset subset
         """
-        self.train_loader = DataLoader(self.tokenized_dataset_pt['train'], \
-                                       batch_size=batch_size_train, num_workers=num_workers)
-        self.val_loader = DataLoader(self.tokenized_dataset_pt['validation'], \
-                                     batch_size=batch_size_train, num_workers=num_workers)
+
+        train_ds = self.grabRandomSubset(self.tokenized_dataset_pt['train'], subset_percentages[0])
+        valid_ds = self.grabRandomSubset(self.tokenized_dataset_pt['validation'], subset_percentages[1])
+        test_ds = self.grabRandomSubset(self.tokenized_dataset_pt['test'], subset_percentages[2])
+
+        self.train_loader = DataLoader(train_ds, batch_size=batch_size_train, num_workers=num_workers, \
+                                       shuffle=shuffle, pin_memory=pin_memory)
+        self.val_loader = DataLoader(valid_ds, batch_size=batch_size_train, num_workers=num_workers, \
+                                    shuffle=shuffle, pin_memory=pin_memory)
         # For the experiments in this repo, the test batch size typically needs to be 1
-        self.test_loader = DataLoader(self.tokenized_dataset_pt['test'], \
-                                      batch_size=batch_size_test, num_workers=num_workers)
+        self.test_loader = DataLoader(test_ds, batch_size=batch_size_test, num_workers=num_workers, \
+                                     shuffle=shuffle, pin_memory=pin_memory)
+
+    def grabRandomSubset(self, dataset, percentage):
+        """ Take a subset of the dataset using random indices in that range
+        """
+        numrange = len(dataset)
+        k = int(numrange * percentage)
+        idxs = np.random.choice(numrange, k, replace=False)
+        return dataset.select(idxs)
+
+
+
+

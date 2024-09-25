@@ -1,10 +1,12 @@
 import torch
 import os
+import matplotlib.pyplot as plt
 from data.factory import TaskFactory
 from data.cola import ColaDataset
 from data.sst2 import Sst2Dataset
 from model.model import BertCustom
 from training.train import PtTrainer
+from model.load_save import saveModelToDisk, loadModelFromDisk
 
 # Trainer for models
 def main():
@@ -27,12 +29,24 @@ def main():
     batch_size_train = 8
     batch_size_val = 8
     sst2.encode()
-    sst2.createDataLoaders(batch_size_train, batch_size_val, 1)
+    sst2.createDataLoaders(batch_size_train, batch_size_val, 8, True, True, subset_percentages=[1, 1, 1])
 
     trainer = PtTrainer(bert, sst2)
     trainer.sendToDevice()
-    trainer.setHyps(epochs=1)
-    out = trainer.fineTune()
+    trainer.setHyps(epochs=8)
+    tr_loss, tr_acc, val_loss, val_acc = trainer.fineTune()
+    saveModelToDisk(trainer.model, os.path.dirname(root_dir), "sst-subset-1")
+
+    # Plot loss results (show it decreases)
+    plt.plot(range(len(tr_loss)), tr_loss, label="Training Loss", color='blue')
+    plt.plot(range(len(val_loss)), val_loss, label="Validation Loss", color='orange')
+    plt.title(f"Training curves for {task_name}")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show();
+
+
 
 
 if __name__ == "__main__":
