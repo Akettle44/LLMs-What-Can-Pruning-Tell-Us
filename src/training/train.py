@@ -19,7 +19,7 @@ class PtTrainer():
     def setDefaultOptimizer(self):
         """ Select appropriate opitimizer and associated params
         """
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5, weight_decay=0.01)
 
     def setDevice(self, device):
         """ Updates the device  

@@ -10,7 +10,10 @@ class Sst2Dataset(TaskDataset):
 
     @override
     def preprocess(self, examples):
-        return self.tokenizer(examples['sentence'], padding='max_length')
+        # Note that [CLS] and [SEP] are being added as a part of this encoding 
+        # process. 128 for max length is arbitrary and was chosen as a means of more 
+        # efficiently training
+        return self.tokenizer(examples['sentence'], padding='max_length', max_length=128)
 
     @override
     def encode(self):

@@ -33,9 +33,9 @@ def main():
 
     trainer = PtTrainer(bert, sst2)
     trainer.sendToDevice()
-    trainer.setHyps(epochs=8)
+    trainer.setHyps(epochs=3)
     tr_loss, tr_acc, val_loss, val_acc = trainer.fineTune()
-    saveModelToDisk(trainer.model, os.path.dirname(root_dir), "sst-subset-1")
+    saveModelToDisk(trainer.model, os.path.dirname(root_dir), "sst-training-5-wd-0.01")
 
     # Plot loss results (show it decreases)
     plt.plot(range(len(tr_loss)), tr_loss, label="Training Loss", color='blue')
@@ -45,9 +45,6 @@ def main():
     plt.ylabel("Loss")
     plt.legend()
     plt.show();
-
-
-
 
 if __name__ == "__main__":
     main()
