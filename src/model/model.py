@@ -1,4 +1,5 @@
 import torch
+from typing import List
 from transformers import BertConfig, BertTokenizer, BertModel
 
 class HeadModule(torch.nn.Module):
@@ -51,10 +52,10 @@ class BertCustom(torch.nn.Module):
 
         # Config and model
         if self.config is None and not use_pretrained:
-            self.config = BertConfig()
+            self.config = BertConfig(hidden_dropout_prob=0.4, attention_probs_dropout_prob=0.4)
             self.model = BertModel(self.config)
         elif self.config is None:
-            self.model = BertModel.from_pretrained(default_model)
+            self.model = BertModel.from_pretrained(default_model, hidden_dropout_prob=0.4, attention_probs_dropout_prob=0.4)
             self.config = self.model.config
         else:
             self.model = BertModel(self.config)
@@ -96,3 +97,14 @@ class BertCustom(torch.nn.Module):
             loss = None
 
         return logits, attentions, intermediate_output, loss
+
+    def freezeLayers(self, freeze_idxs: List[int]):
+        """ Freeze particular layers during training
+            Typically used to mitigate overfitting
+        Args:
+            freeze_idxs (list): List of pytorch encoder layers to freeze
+        """
+        # Freeze ecnoder layers
+        for idx in freeze_idxs:
+            for param in self.model.encoder.layer[idx].parameters():
+                param.requires_grad = False

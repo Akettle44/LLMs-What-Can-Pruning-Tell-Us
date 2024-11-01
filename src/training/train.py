@@ -19,7 +19,7 @@ class PtTrainer():
     def setDefaultOptimizer(self):
         """ Select appropriate opitimizer and associated params
         """
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5, weight_decay=0.01)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5)
 
     def setDevice(self, device):
         """ Updates the device  
@@ -110,6 +110,7 @@ class PtTrainer():
             ### END EPOCH VALIDATION ###
 
             # Results from each epoch of training
-            print(f"Epoch {epoch}:  train_loss: {train_loss[-1]}, val_loss: {val_loss[-1]}")
+            print(f"Epoch {epoch}: train_loss: {train_loss[-1]}, val_loss: {val_loss[-1]}")
+            print(f"Epoch {epoch}: train_acc: {train_accs[-1]}, val_acc: {val_accs[-1]}")
 
         return train_loss, train_accs, val_loss, val_accs
