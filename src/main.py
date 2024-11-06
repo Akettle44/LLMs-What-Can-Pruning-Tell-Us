@@ -6,10 +6,11 @@ from data.cola import ColaDataset
 from data.sst2 import Sst2Dataset
 from model.model import BertCustom
 from training.train import PtTrainer
+from pruning.pruners import L1Pruner
 from model.load_save import saveModelToDisk, loadModelFromDisk
 
 # Trainer for models
-def main():
+def train():
 
     # Model
     config = None
@@ -61,6 +62,18 @@ def main():
     plt.legend()
     plt.savefig(os.path.join(save_path, "accuracy_plot.png"))
 
+# Prune + Evaluate using CKA
+def eval():
+    root_dir = os.path.dirname(os.getcwd())
+    model_dir = os.path.join(root_dir, "models")
+    specific_model = os.path.join(model_dir, "sequence_classification/sst-training-17-dp-0.4-fz6-10")
+    bert = loadModelFromDisk(specific_model)
+
+    # Define pruner + prune models
+    pr = L1Pruner(bert)
+    pr.prune()
+    #print(pr.models, len(pr.models))
 
 if __name__ == "__main__":
-    main()
+    #train()
+    eval()

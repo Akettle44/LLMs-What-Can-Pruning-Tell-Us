@@ -24,17 +24,17 @@ class Pruner(ABC):
 
         # Map model to sparsity
         self.baseline = baseline
-        self.strengths = []
+        self.strengths = strengths
         self.layers = layers
         self.models = [] # Keep on CPU to avoid VRAM problems
         self.num_models = len(strengths)
-        self.pruning_parameters = Pruner.buildParameterList(baseline)
 
     @abstractmethod
     def prune(self):
         pass
 
-    def buildParameterList(self):
+    @staticmethod
+    def buildParameterList(model, layers):
         # =[torch.nn.Linear]
         """ Compile a list of parameters (weights) that can be pruned.
             Allows the user to select a subset of the network.
@@ -45,8 +45,8 @@ class Pruner(ABC):
             list: List of valid parameters to prune
         """
         parameters_to_prune = []
-        for _, module in self.baseline.named_modules():
-            for layer in self.layers:
+        for _, module in model.named_modules():
+            for layer in layers:
                 if isinstance(module, layer):
                     parameters_to_prune.append((module, 'weight'))
         return parameters_to_prune
