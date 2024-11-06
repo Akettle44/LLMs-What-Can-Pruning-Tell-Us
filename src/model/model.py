@@ -108,3 +108,23 @@ class BertCustom(torch.nn.Module):
         for idx in freeze_idxs:
             for param in self.model.encoder.layer[idx].parameters():
                 param.requires_grad = False
+
+    # TODO: Eventually combine this into forward pass, should have all necessary information
+    def computeMetric(self, outputs, targets):
+        """ Compute the metric associated with a particular task
+
+        Args:
+            outputs (tuple): Outputs from forward pass
+            targets (_type_): _description_
+        """
+
+        # Vanilla unweighted accuracy
+        if self.task_type == 'sequence_classification':
+            logits = outputs[0]
+            probabilities = torch.argmax(torch.sigmoid(logits), axis=1)
+            correct = torch.count_nonzero(probabilities == targets)
+            if len(targets == 0):
+                return 0
+
+            return correct / len(targets)
+            
