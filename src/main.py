@@ -86,10 +86,20 @@ def eval():
     sst2.encode()
     sst2.createDataLoaders(batch_size_train, batch_size_val, 8, True, True, subset_percentages=[1, 1, 1])
 
+    # Define save directory
+    base_save_dir = os.path.join(os.path.join(os.path.dirname(os.getcwd()), "plots"))
+    dirs = sorted(os.listdir(base_save_dir))
+    i = int(dirs[-1].split('_')[-1])
+    i += 1
+    run = "run_" + str(i)
+    save_dir = os.path.join(base_save_dir, run)
+    os.mkdir(save_dir)
+
     # Define pruner + prune models
-    pr = L1Pruner(bert)
+    pr = L1Pruner(bert, save_dir)
     pr.prune()
-    pr.compareModels(sst2.val_loader, device)
+    accs = pr.compareModels(sst2.val_loader, device)
+    print(accs)
 
 if __name__ == "__main__":
     #train()

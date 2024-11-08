@@ -123,8 +123,8 @@ class BertCustom(torch.nn.Module):
             logits = outputs[0]
             probabilities = torch.argmax(torch.sigmoid(logits), axis=1)
             correct = torch.count_nonzero(probabilities == targets)
-            if len(targets == 0):
+            if len(targets) == 0:
                 return 0
 
-            return correct / len(targets)
+            return correct.item() / len(targets)
             

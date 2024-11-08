@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 
 class Pruner(ABC):
     @abstractmethod
-    def __init__(self, baseline, layers, strengths):
+    def __init__(self, baseline, save_dir, layers, strengths):
         """ Initializer for 
 
         Args:
@@ -31,6 +31,7 @@ class Pruner(ABC):
         self.layers = layers
         self.models = [] # Keep on CPU to avoid VRAM problems
         self.num_models = len(strengths)
+        self.save_dir = save_dir
 
     @abstractmethod
     def prune(self):
@@ -74,13 +75,31 @@ class Pruner(ABC):
                 results = cka.export()
                 #print(results)
 
-                # temporary quick fix
-                plot_name = os.path.join(os.path.join(os.path.dirname(os.getcwd()), "plots"), model2_name + ".png")
-                cka.plot_results(plot_name, f"{model1_name} vs {model2_name}")
+                self.plotCka(cka, model1_name, model2_name)
 
                 # Remove model from GPU mem
                 del model2 # Reference therefore list idx deleted as well
                 torch.cuda.empty_cache()
+
+        self.plotMetric(accuracies, "Accuracy")
+
+        return accuracies
+
+    def plotCka(self, cka, model1_name, model2_name):
+        """ Plot the CKA results
+
+        Args:
+            cka (cka): cka object
+            model1_name (str): model1 name
+            model2_name (str): model2 name
+        """
+        # Plot CKA Results
+        plot_name = os.path.join(self.save_dir, model2_name + ".png")
+        cka.plot_results(plot_name, f"{model1_name} vs {model2_name}")
+
+    @abstractmethod
+    def plotMetric(self, metrics, metric_name):
+        pass
 
     @staticmethod
     def performEval(model, dataloader, device):
@@ -143,4 +162,3 @@ class Pruner(ABC):
             return 0
 
         return zeros / elements
-

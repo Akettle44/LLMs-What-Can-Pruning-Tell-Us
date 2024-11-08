@@ -5,6 +5,8 @@
 import numpy as np
 import torch.nn
 import torch.nn.utils.prune as prune
+import matplotlib.pyplot as plt
+import os
 from copy import deepcopy
 from overrides import override
 from .prune_interface import Pruner
@@ -14,9 +16,9 @@ class L1Pruner(Pruner):
     """
 
     @override
-    def __init__(self, baseline, layers=[torch.nn.Linear], strengths=list(np.linspace(0, 0.9, 10))):
+    def __init__(self, baseline, save_dir, layers=[torch.nn.Linear], strengths=list(np.linspace(0, 0.9, 10))):
         # Init base variables + set pruning method
-        super().__init__(baseline, layers, strengths)
+        super().__init__(baseline, save_dir, layers, strengths)
         self.pruning_method = prune.L1Unstructured
 
     @override
@@ -48,6 +50,23 @@ class L1Pruner(Pruner):
 
             sparsity = self.computeSparsity(model_i)
             self.models.append((model_i, sparsity))
+
+    @override
+    def plotMetric(self, metrics, metric_name):
+        """ Plot the results from evaluation and the CKA 
+
+        Args:
+            accuracies (list): List of accuracies (must align with pruned model sparsitites)
+        """
+
+        # Plot Accuracy Results
+        plt.figure()
+        plt.plot(self.strengths, metrics, label=f"Unstructured Pruning: {metric_name}")
+        plt.title("Validation Accuracy vs Encoder Pruning Percentage")
+        plt.xlabel("Encoder Layer's Sparsity")
+        plt.ylabel("Validation Accuracy")
+        plt.legend()
+        plt.savefig(os.path.join(self.save_dir, "accuracy_plot.png"))
 
 
 
