@@ -15,8 +15,10 @@ An example of the results can be found here. The output of torch_cka is a heatma
 ### Writeup
 The writeup and analysis of the experiments and results can be found [here](./media/llm_report.pdf). Alternatively, the [powerpoint](./media/LLM_Pruning_Report.pptx) provides a high level summary.
 
-### Developers
-Andrew Kettle (Lead)   https://github.com/Akettle44  
+### Active Developers
+Andrew Kettle (Lead, Refactor)   https://github.com/Akettle44
+
+### Version 1 Developers
 Abhinand Ganesh        https://github.com/AbhinandG  
 Brianna Gautama        https://github.com/briannagautama  
 Diya Saha              https://github.com/DiyadotSaha  
