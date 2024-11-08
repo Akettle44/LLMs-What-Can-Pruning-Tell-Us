@@ -7,7 +7,7 @@ from warnings import warn
 from typing import List, Dict
 import matplotlib.pyplot as plt
 from .utils import add_colorbar
-
+from copy import deepcopy
 
 class CKA:
     def __init__(self,
@@ -156,7 +156,10 @@ class CKA:
         num_batches = min(len(dataloader1), len(dataloader1))
 
         # original
-        for (x1, x2) in tqdm(zip(dataloader1, dataloader2), desc="| Comparing features |", total=num_batches):
+        for x1 in tqdm(dataloader1, desc="| Comparing features |", total=num_batches):
+
+            # Sample same batch
+            x2 = deepcopy(x1)
 
             self.model1_features = {}
             self.model2_features = {}

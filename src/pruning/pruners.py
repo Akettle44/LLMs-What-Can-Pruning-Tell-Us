@@ -14,7 +14,7 @@ class L1Pruner(Pruner):
     """
 
     @override
-    def __init__(self, baseline, layers=[torch.nn.Linear], strengths=list(np.linspace(0, 1, 10))):
+    def __init__(self, baseline, layers=[torch.nn.Linear], strengths=list(np.linspace(0, 0.9, 10))):
         # Init base variables + set pruning method
         super().__init__(baseline, layers, strengths)
         self.pruning_method = prune.L1Unstructured
@@ -33,7 +33,6 @@ class L1Pruner(Pruner):
             # Deep copy model
             model_i = deepcopy(self.baseline)
             pruning_parameters = Pruner.buildParameterList(model_i, self.layers)
-            print(pruning_parameters)
 
             if p > 0:
                 # Perform pruning

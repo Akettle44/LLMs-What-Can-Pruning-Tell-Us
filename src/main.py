@@ -64,15 +64,32 @@ def train():
 
 # Prune + Evaluate using CKA
 def eval():
+    # Paths
     root_dir = os.path.dirname(os.getcwd())
     model_dir = os.path.join(root_dir, "models")
     specific_model = os.path.join(model_dir, "sequence_classification/sst-training-17-dp-0.4-fz6-10")
+
+    # Load BERT
     bert = loadModelFromDisk(specific_model)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Load Dataset
+    dataset_name = "glue"
+    task_name = "sst2"
+    root_dir = os.getcwd()
+    loadLocal = False
+    sst2 = Sst2Dataset(dataset_name, task_name, bert.tokenizer, root_dir, loadLocal)
+
+    # Encode Dataset
+    batch_size_train = 8
+    batch_size_val = 8
+    sst2.encode()
+    sst2.createDataLoaders(batch_size_train, batch_size_val, 8, True, True, subset_percentages=[1, 1, 1])
 
     # Define pruner + prune models
     pr = L1Pruner(bert)
     pr.prune()
-    #print(pr.models, len(pr.models))
+    pr.compareModels(sst2.val_loader, device)
 
 if __name__ == "__main__":
     #train()

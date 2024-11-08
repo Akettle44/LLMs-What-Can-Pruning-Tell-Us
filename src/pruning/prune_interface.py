@@ -5,7 +5,10 @@ import torch.nn.utils.prune as prune
 import transformers
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
+from tqdm import tqdm
+from torch_cka import CKA
 from abc import ABC, abstractmethod
 
 class Pruner(ABC):
@@ -32,6 +35,71 @@ class Pruner(ABC):
     @abstractmethod
     def prune(self):
         pass
+
+    def compareModels(self, dataloader, device):
+        """ Compare models using CKA. TODO: Eventually break this out into its own
+            class so that models can be compared in different ways
+
+        Returns:
+            _type_: _description_
+        """
+
+        # Isolate CKA comparison to BERT encoder only
+        model1_names = [f"model.encoder.layer.{i}.attention" for i in range(0, 12)]
+        model2_names = [s for s in model1_names] # Perform Copy
+
+        # Be careful to watch VRAM when running this
+        accuracies = [] # Measured on dataloader passed to this function
+        for i in range(1, self.num_models):
+            with torch.no_grad():
+                # Name models for plot
+                model1_name = "Baseline"
+                model2_name = f"{self.baseline.task_type}-Pruned-{round(self.strengths[i], 2)}"
+
+                # Select model, Always compare against baseline
+                model1, sparsity1 = self.models[0] # Baseline
+                model2, sparsity2 = self.models[i] # Pruned Model
+                model1 = model1.to(device)
+                model2 = model2.to(device)
+
+                if(i == 1):
+                    # Compute accuracy for baseline model on first pass
+                    accuracies.append(Pruner.performEval(model1, dataloader, device))
+
+                accuracies.append(Pruner.performEval(model2, dataloader, device))
+
+                # Compute CKA
+                cka = CKA(model1, model2, model1_name=model1_name, model2_name=model2_name, model1_layers=model1_names, model2_layers=model2_names, device=device)
+                cka.compare(dataloader) 
+                results = cka.export()
+                #print(results)
+
+                # temporary quick fix
+                plot_name = os.path.join(os.path.join(os.path.dirname(os.getcwd()), "plots"), model2_name + ".png")
+                cka.plot_results(plot_name, f"{model1_name} vs {model2_name}")
+
+                # Remove model from GPU mem
+                del model2 # Reference therefore list idx deleted as well
+                torch.cuda.empty_cache()
+
+    @staticmethod
+    def performEval(model, dataloader, device):
+        """ Perform evaluation of the model
+
+        Args:
+            model (torch.nn.module)
+            dataloader (torch.dataloader)
+        Returns:
+            Metric score for particular task
+        """
+
+        for batch in tqdm(dataloader):        
+            # Run inference
+            batch = {k: v.to(device) for k,v in batch.items()}
+            outputs = model(**batch)
+            met_score = model.computeMetric(outputs, batch['label'])
+
+        return met_score
 
     @staticmethod
     def buildParameterList(model, layers):
