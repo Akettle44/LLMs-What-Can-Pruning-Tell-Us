@@ -20,7 +20,6 @@ class TestBertIO():
         tokenizer = None
         task_type = 'sequence_classification'
         test_dir, root_dir, model_dir,  = setUp
-        print(root_dir)
 
         # Create the model
         bert = BertCustom(config, num_classes, tokenizer, task_type, False)

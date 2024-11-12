@@ -21,6 +21,12 @@ class PtTrainer():
         """
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=2e-5)
 
+    def updateOptimizerLr(self):
+        """ Update the optimizers learning rate
+        """
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = self.hyps['lr']
+
     def setDevice(self, device):
         """ Updates the device  
         """
