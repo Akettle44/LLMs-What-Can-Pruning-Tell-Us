@@ -37,7 +37,7 @@ class PtTrainer():
         """
         self.model.to(self.device)
 
-    def setHyps(self, **hyps):
+    def setHyps(self, hyps):
         """ Grab all hyperparameters and their associated value
         """
         for key, value in hyps.items():

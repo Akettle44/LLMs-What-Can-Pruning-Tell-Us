@@ -24,7 +24,7 @@ class TestBertIO():
         # Create the model
         bert = BertCustom(config, num_classes, tokenizer, task_type, False)
         # Save the model to disk
-        saveModelToDisk(bert, root_dir, "unit-test-bert")
+        saveModelToDisk(bert, root_dir, "unit_test-bert")
 
     @pytest.mark.order(2)
     def test_loadModel(self, setUp):
@@ -43,8 +43,8 @@ class TestBertIO():
         saved_bert = BertCustom(config, num_classes, tokenizer, task_type, False)
 
         # Load BERT from disk
-        load_path = os.path.join(os.path.join(model_dir, task_type), "unit-test-bert")
-        bert = loadModelFromDisk(load_path)
+        load_path = os.path.join(os.path.join(model_dir, task_type), "unit_test-bert")
+        bert, _ = loadModelFromDisk(load_path)
 
         assert saved_bert.num_classes == bert.num_classes
         assert saved_bert.task_type == bert.task_type
@@ -58,7 +58,7 @@ class TestBertIO():
         _, _, model_root_dir, = setUp
         yield # Allow test to run first
         
-        model_name = "unit-test-bert"
+        model_name = "unit_test-bert"
         task_dir = os.path.join(model_root_dir, "sequence_classification")
         model_dir = os.path.join(task_dir, model_name)
 
