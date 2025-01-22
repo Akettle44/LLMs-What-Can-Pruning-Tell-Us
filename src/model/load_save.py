@@ -2,7 +2,9 @@ import os
 import torch
 from transformers import BertConfig, BertTokenizer
 from .model import BertCustom
+from utils.utils import Utils
 
+# TODO: Push hyperparemeter config file here as well
 def saveModelToDisk(model: BertCustom, root_dir, model_name):
     """ Save the bert model to disk (using huggingface)
 
@@ -31,6 +33,8 @@ def saveModelToDisk(model: BertCustom, root_dir, model_name):
         f.write('Legend: num_classes, task_type \n')
         f.write(f"{model.num_classes}, {model.task_type}")
 
+# TODO: Adjust bert constructor to take in dropout arguments so that 
+# here and main can have access to it
 def loadModelFromDisk(model_dir):
     """ Load the config, tokenizer, and model from disk (local)
     If you want to use a pretrained model directly from HuggingFace, 
@@ -40,6 +44,11 @@ def loadModelFromDisk(model_dir):
     Args:
         model_dir (str): path to model on disk
     """
+
+    # Load Hyperparameters
+    task_name = model_dir.split('/')[-1].split('-')[0]
+    hyp_dir = os.path.dirname(os.path.dirname(model_dir)) # Insanely ratchet
+    hyps = Utils.loadHypsFromDisk(os.path.join(os.path.join(hyp_dir, 'hyps'), task_name + '.txt'))
 
     config = BertConfig.from_pretrained(model_dir)
     tokenizer = BertTokenizer.from_pretrained(model_dir, useFast=True)
@@ -53,9 +62,10 @@ def loadModelFromDisk(model_dir):
                 task_type = task_type.strip()
 
     bert = BertCustom(config, num_classes, tokenizer, task_type)
+    bert.freezeLayers(hyps['freezeLayers']) # TODO: Check to make sure layers need to be frozen
 
     # TODO: Improve this, should be internal to class
     state_dict = torch.load(os.path.join(model_dir, 'model.pth'))
     bert.load_state_dict(state_dict)
 
-    return bert
+    return bert, hyps
